@@ -52,7 +52,7 @@ class Ichimoku_cross(Strategy):
         if self.position:
             if self.data.Close[-1] < self.kijun_sen[-1]  \
                     and self.tenkan_sen[-1] < self.kijun_sen[-1] \
-                    and self.data.Close[-1] < self.span_A[-1]:
+                    and (self.data.Close[-1] < self.span_A[-1] or self.data.Close[-1] < self.span_B[-1]):
 
                 self.position.close()
 
@@ -61,10 +61,10 @@ class Ichimoku_cross(Strategy):
                     self.tenkan_sen[-1] > self.kijun_sen[-1] and \
                     self.chikou_span[-1] > self.data.Close[-26]:
                 self.buy()
-
+                # self.buy(sl=self.span_B[-1])
 
 if __name__ == '__main__':
-    tiker = yf.Ticker("INTC")
+    tiker = yf.Ticker("BABA")
 
     tiker_data = tiker.history(period='10y')
 
