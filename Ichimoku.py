@@ -3,7 +3,7 @@ from backtesting.lib import crossover
 from backtesting import Strategy
 import pandas_ta as ta
 from backtesting import Backtest
-
+import yfinance as yf
 
 def spanA(data):
     # Data OHLCV
@@ -62,7 +62,11 @@ class Ichimoku_cross(Strategy):
 
 
 if __name__ == '__main__':
-    bt = Backtest(GOOG, Ichimoku_cross, cash=10000, commission=.002,
+    baba = yf.Ticker("BABA")
+
+    baba_data = baba.history(period='max')
+
+    bt = Backtest(baba_data, Ichimoku_cross, cash=10000, commission=.002,
                   exclusive_orders=True)
     stats = bt.run()
     bt.plot()
