@@ -50,8 +50,10 @@ class Ichimoku_cross(Strategy):
 
     def next(self):
         if self.position:
-            if self.data.Close[-1] < self.kijun_sen[-1] and \
-                    self.tenkan_sen[-1] < self.kijun_sen[-1]:
+            if self.data.Close[-1] < self.kijun_sen[-1]  \
+                    and self.tenkan_sen[-1] < self.kijun_sen[-1] \
+                    and self.data.Close[-1] < self.span_A[-1]:
+
                 self.position.close()
 
         else:
@@ -62,11 +64,11 @@ class Ichimoku_cross(Strategy):
 
 
 if __name__ == '__main__':
-    baba = yf.Ticker("BABA")
+    tiker = yf.Ticker("INTC")
 
-    baba_data = baba.history(period='max')
+    tiker_data = tiker.history(period='10y')
 
-    bt = Backtest(baba_data, Ichimoku_cross, cash=10000, commission=.002,
+    bt = Backtest(tiker_data, Ichimoku_cross, cash=10000, commission=.002,
                   exclusive_orders=True)
     stats = bt.run()
     bt.plot()
