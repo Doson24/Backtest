@@ -1,9 +1,13 @@
+import datetime
+
 from backtesting.test import GOOG
 from backtesting.lib import crossover
 from backtesting import Strategy
 import pandas_ta as ta
 from backtesting import Backtest
 import yfinance as yf
+import pandas as pd
+
 
 def spanA(data):
     # Data OHLCV
@@ -51,8 +55,8 @@ class Ichimoku_cross(Strategy):
     def next(self):
         if self.position:
             if self.data.Close[-1] < self.kijun_sen[-1]  \
-                    and self.tenkan_sen[-1] < self.kijun_sen[-1] \
-                    and (self.data.Close[-1] < self.span_A[-1] or self.data.Close[-1] < self.span_B[-1]):
+                    and self.tenkan_sen[-1] < self.kijun_sen[-1]: \
+                    # and (self.data.Close[-1] < self.span_A[-1] or self.data.Close[-1] < self.span_B[-1]):
 
                 self.position.close()
 
@@ -65,8 +69,10 @@ class Ichimoku_cross(Strategy):
 
 if __name__ == '__main__':
     tiker = yf.Ticker("BABA")
-
-    tiker_data = tiker.history(period='10y')
+    """
+    Для интервала в "1h" данные только за последние 730 дней
+    """
+    tiker_data = tiker.history(period='max')
 
     bt = Backtest(tiker_data, Ichimoku_cross, cash=10000, commission=.002,
                   exclusive_orders=True)
