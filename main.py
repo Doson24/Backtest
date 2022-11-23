@@ -2,7 +2,7 @@ from SMA_CROSS import Sma_cross
 from backtesting import Backtest
 from backtesting.test import GOOG
 import pandas as pd
-from Ichimoku import Ichimoku_cross
+from Ichimoku import Ichimoku_cross, tenkan_Sen
 
 
 if __name__ == '__main__':
