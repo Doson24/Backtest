@@ -9,55 +9,75 @@ import yfinance as yf
 import pandas as pd
 
 
-def spanA(data):
+def spanA(data, tenkan_param, kijun_param, senkou_param):
     # Data OHLCV
-    ichimoku = ta.ichimoku(data.High.s, data.Low.s, data.Close.s)
-    print(ichimoku[0].to_numpy().T)
+    ichimoku = ta.ichimoku(data.High.s, data.Low.s, data.Close.s,
+                           tenkan=tenkan_param, kijun=kijun_param, senkou=senkou_param)
+    # print(ichimoku[0].to_numpy().T)
     return ichimoku[0].to_numpy().T[0]
 
 
-def spanB(data):
+def spanB(data, tenkan_param, kijun_param, senkou_param):
     # Data OHLCV
-    ichimoku = ta.ichimoku(data.High.s, data.Low.s, data.Close.s)
+    ichimoku = ta.ichimoku(data.High.s, data.Low.s, data.Close.s,
+                           tenkan=tenkan_param, kijun=kijun_param, senkou=senkou_param)
     return ichimoku[0].to_numpy().T[1]
 
 
-def tenkan_Sen(data):
+def tenkan_Sen(data, tenkan_param, kijun_param, senkou_param):
     # Data OHLCV
-    ichimoku = ta.ichimoku(data.High.s, data.Low.s, data.Close.s)
+    ichimoku = ta.ichimoku(data.High.s, data.Low.s, data.Close.s,
+                           tenkan=tenkan_param, kijun=kijun_param, senkou=senkou_param)
     return ichimoku[0].to_numpy().T[2]
 
 
-def kijun_Sen(data):
+def kijun_Sen(data, tenkan_param, kijun_param, senkou_param):
     # Data OHLCV
-    ichimoku = ta.ichimoku(data.High.s, data.Low.s, data.Close.s)
+    ichimoku = ta.ichimoku(data.High.s, data.Low.s, data.Close.s,
+                           tenkan=tenkan_param, kijun=kijun_param, senkou=senkou_param)
     return ichimoku[0].to_numpy().T[3]
 
 
-def chikou_Span(data):
+def chikou_Span(data, tenkan_param, kijun_param, senkou_param):
     # Data OHLCV
-    ichimoku = ta.ichimoku(data.High.s, data.Low.s, data.Close.s)
+    ichimoku = ta.ichimoku(data.High.s, data.Low.s, data.Close.s,
+                           tenkan=tenkan_param, kijun=kijun_param, senkou=senkou_param)
     return ichimoku[0].to_numpy().T[4]
 
 
 class Ichimoku_cross(Strategy):
-    # n1 = 20
-    # n2 = 25
+    tenkan_param = 9
+    kijun_param = 26
+    senkou_param = 52
 
     def init(self):
-        self.span_A = self.I(spanA, self.data)
-        self.span_B = self.I(spanB, self.data)
-        self.tenkan_sen = self.I(tenkan_Sen, self.data)
-        self.kijun_sen = self.I(kijun_Sen, self.data)
-        self.chikou_span = self.I(chikou_Span, self.data)
-
+        """Ichimoku attributes"""
+        self.span_A = self.I(spanA, self.data, self.tenkan_param, self.kijun_param, self.senkou_param)
+        self.span_B = self.I(spanB, self.data, self.tenkan_param, self.kijun_param, self.senkou_param)
+        self.tenkan_sen = self.I(tenkan_Sen, self.data, self.tenkan_param, self.kijun_param, self.senkou_param)
+        self.kijun_sen = self.I(kijun_Sen, self.data, self.tenkan_param, self.kijun_param, self.senkou_param)
+        self.chikou_span = self.I(chikou_Span, self.data, self.tenkan_param, self.kijun_param, self.senkou_param)
+        """Other atrributes"""
 
     def next(self):
-        if self.position:
-            if self.data.Close[-1] < self.kijun_sen[-1]  \
+        """
+         if self.position:
+            if self.data.Close[-1] < self.kijun_sen[-1] \
                     and self.tenkan_sen[-1] < self.kijun_sen[-1]: \
                     # and (self.data.Close[-1] < self.span_A[-1] or self.data.Close[-1] < self.span_B[-1]):
+                self.position.close()
 
+         else:
+            if self.data.Close[-1] > self.span_A[-1] > self.span_B[-1] and \
+                    self.tenkan_sen[-1] > self.kijun_sen[-1] and \
+                    self.chikou_span[-1] > self.data.Close[-26]:
+                self.buy()
+        """
+
+        if self.position:
+            if self.data.Close[-1] < self.kijun_sen[-1] \
+                    and self.tenkan_sen[-1] < self.kijun_sen[-1]: \
+                    # and (self.data.Close[-1] < self.span_A[-1] or self.data.Close[-1] < self.span_B[-1]):
                 self.position.close()
 
         else:
@@ -67,6 +87,7 @@ class Ichimoku_cross(Strategy):
                 self.buy()
                 # self.buy(sl=self.span_B[-1])
 
+
 if __name__ == '__main__':
     tiker = yf.Ticker("BABA")
     """
@@ -74,8 +95,27 @@ if __name__ == '__main__':
     """
     tiker_data = tiker.history(period='max')
 
-    bt = Backtest(tiker_data, Ichimoku_cross, cash=10000, commission=.002,
-                  exclusive_orders=True)
-    stats = bt.run()
-    bt.plot()
+    bt = Backtest(tiker_data, Ichimoku_cross, cash=10000, commission=.002, exclusive_orders=True)
+    """
+    Перебор этих значений займет 4ч:
+                                 tenkan_param=range(5, 20, 1),
+                                 kijun_param=range(20, 52, 1),
+                                 senkou_param=range(52, 100, 1)
+    """
+
+    stats, heatmap = bt.optimize(tenkan_param=range(5, 20, 1),
+                                 kijun_param=range(20, 52, 1),
+                                 senkou_param=range(52, 100, 1),
+                                 maximize='Equity Final [$]', return_heatmap=True
+                                 )
+
+    # stats = bt.run()
+    # bt.plot()
+    # print(stats)
+
     print(stats)
+    print(stats.tail())
+    print(stats._strategy)
+    print(heatmap)
+    bt.plot(plot_volume=True, plot_pl=True)
+    heatmap.plot()
